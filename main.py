@@ -23,7 +23,7 @@ parser.add_argument('--path_audio', type=str, default='', help='Path to audio fi
 parser.add_argument('--path_transcript', type=str, default='transcriptions/transcript.txt', help='Path to transcript file')
 parser.add_argument('--resume', type=bool, default=False, help='Resume with AI')
 parser.add_argument("--model", help="Indicate the Whisper model to download", default="small")
-parser.add_argument('--device', type=str, default='cpu', help='Device to use for inference')
+parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
 parser.add_argument('--fp16', type=bool, default=False, help='Use FP16')
 args = parser.parse_args()
 
@@ -58,9 +58,15 @@ def main():
     result = model.transcribe(path, fp16=args.fp16, verbose=True)
 
     logging.info("Saving transcript")
+    # save text with line breaks
     with open(args.path_transcript, 'w') as f:
-        f.write(result)
+        for s in result["segments"]:
+            start = s['start']
+            end = s['end']
+            text = s['text']
+            f.write(text + "\n")
         f.close()
+
     logging.info("Transcript saved in {}".format(args.path_transcript))
 
     if args.resume:
