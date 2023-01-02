@@ -21,7 +21,7 @@ parser.add_argument('--path_audio', type=str, default='', help='Path to audio fi
 parser.add_argument('--path_transcript', type=str, default='transcriptions/transcript.txt', help='Path to transcript file')
 parser.add_argument('--resume', type=bool, default=False, help='Resume with AI')
 parser.add_argument("--model", help="Indicate the Whisper model to download", default="small")
-parser.add_argument('--device', type=str, default='mps', help='Device to use for inference')
+parser.add_argument('--device', type=str, default='cpu', help='Device to use for inference')
 parser.add_argument('--fp16', type=bool, default=False, help='Use FP16')
 args = parser.parse_args()
 
@@ -53,7 +53,7 @@ def main():
         path = utils.convert_video_to_audio_path(path, "./audios/audio.mp3")
 
     logging.info("Transcribe the audio")
-    result = model.transcribe(path, fp16=args.fp16)
+    result = model.transcribe(path, fp16=args.fp16, verbose=True)
 
     logging.info("Saving transcript")
     with open(args.path_transcript, 'w') as f:
