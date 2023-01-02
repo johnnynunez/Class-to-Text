@@ -23,6 +23,8 @@ wheels/
 pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
+# User-specific stuff:
+.idea/
 .installed.cfg
 *.egg
 MANIFEST
@@ -127,3 +129,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# MACOS
+.DS_Store
+
+# format
+*.mp3
+*.mp4
