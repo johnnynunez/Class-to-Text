@@ -4,8 +4,8 @@ and natural language processing techniques to generate a written transcript of t
 and then summarizes the key points and main themes of the lecture.  
 
 ## Features
-Automatic transcription of audio or video lectures. 
-Summary of key points and main themes. 
-Customizable summary length. 
-Automatic identification of speaker turns. 
-Support for multiple languages. 
+Automatic transcription of audio or video lectures.  
+Summary of key points and main themes.  
+Customizable summary length.  
+Automatic identification of speaker turns.  
+Support for multiple languages.  
