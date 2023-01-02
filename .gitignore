@@ -136,3 +136,4 @@ dmypy.json
 # format
 *.mp3
 *.mp4
+*.txt
