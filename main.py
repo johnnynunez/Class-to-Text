@@ -16,11 +16,13 @@ logging.basicConfig(
 # Parse input arguments
 parser = argparse.ArgumentParser(description='Whisper Transcription',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--path_video', type=str, default='video.mp4', help='Path to video file')
+parser.add_argument('--path_video', type=str, help='Path to video file')
 parser.add_argument('--path_audio', type=str, default='', help='Path to audio file')
 parser.add_argument('--path_transcript', type=str, default='transcriptions/transcript.txt', help='Path to transcript file')
 parser.add_argument('--resume', type=bool, default=False, help='Resume with AI')
 parser.add_argument("--model", help="Indicate the Whisper model to download", default="small")
+parser.add_argument('--device', type=str, default='mps', help='Device to use for inference')
+parser.add_argument('--fp16', type=bool, default=False, help='Use FP16')
 args = parser.parse_args()
 
 logging.basicConfig(
@@ -38,10 +40,10 @@ def main():
         logging.info("Trying load audio file")
         if not args.path_audio:
             logging.error("Please specify a audio file")
-            sys.exit()
+            exit()
 
     logging.info("Downloading Whisper model")
-    model = whisper.load_model(args.model)
+    model = whisper.load_model(args.model, device=args.device)
 
     logging.info("Loading video...")
     path = args.path_video if args.path_video else args.path_audio
@@ -51,7 +53,7 @@ def main():
         path = utils.convert_video_to_audio_path(path, "./audios/audio.mp3")
 
     logging.info("Transcribe the audio")
-    result = model.transcribe(path)
+    result = model.transcribe(path, fp16=args.fp16)
 
     logging.info("Saving transcript")
     with open(args.path_transcript, 'w') as f:
