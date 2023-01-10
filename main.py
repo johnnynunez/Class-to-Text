@@ -47,6 +47,7 @@ logging.basicConfig(
 
 
 def main():
+    # Load model
     if not args.path_video:
         logging.error("Please specify a video file")
         logging.info("Trying load audio file")
@@ -105,7 +106,7 @@ def main():
             # save response in new paragraph
             responses.append(response['choices'][0]['text'] + "\n")
         final_output = "".join(responses)
-        with open(args.path_transcript, './resume/resume.txt') as f:
+        with open('./resume/resume.txt', 'w') as f:
             f.write(final_output)
             f.close()
         logging.info("Saving Resume")
