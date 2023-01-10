@@ -85,7 +85,7 @@ def main():
         # load txt file
         transcript = open(args.path_transcript, 'r').read()
         # split text in chunks
-        chunks = utils.reduce_prompt(transcript)
+        chunks = utils.reduce_prompt(transcript, CHUNK_SIZE)
         # send chunks to AI
         # Initialize an empty list to store the generated responses
         responses = []
