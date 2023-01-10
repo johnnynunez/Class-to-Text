@@ -1,12 +1,15 @@
 import argparse
+import concurrent
 import logging
 import os
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 import openai
 import whisper
-from tqdm import tqdm
 from transformers import pipeline
+
+from tqdm import tqdm
 
 import utils
 
@@ -32,9 +35,9 @@ parser.add_argument('--path_video', type=str, help='Path to video file')
 parser.add_argument('--path_audio', type=str, default='', help='Path to audio file')
 parser.add_argument('--path_transcript', type=str, default='transcriptions/transcript.txt',
                     help='Path to transcript file')
-parser.add_argument('--resume', type=bool, default=False, help='Resume with AI')
+parser.add_argument('--summarize', type=bool, default=False, help='Summarize with AI')
 parser.add_argument("--model_transcription", help="Indicate the Whisper model to download", default="small")
-parser.add_argument("--model_resume", help="OpenAI or Opensource", default="Opensource")
+parser.add_argument("--model_summarize", help="OpenAI or Opensource", default="Opensource")
 parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
 parser.add_argument('--fp16', type=bool, default=False, help='Use FP16')
 args = parser.parse_args()
@@ -83,15 +86,15 @@ def main():
 
     logging.info("Transcript saved in {}".format(args.path_transcript))
 
-    if args.resume:
+    if args.summarize:
+        logging.info("Summarize with AI")
         final_output = ""
-        logging.info("Resume with AI")
         transcript = open(args.path_transcript, 'r').read()
         # Split the text into chunks
         chunks = utils.reduce_prompt(transcript, CHUNK_SIZE)
         # text_chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
-        if args.model_resume == "OpenAI":
-            logging.info("Resume with OpenAI")
+        if args.model_summarize == "OpenAI":
+            logging.info("Summarize with OpenAI")
             responses = []
             for chunk in tqdm(chunks):
                 response = openai.Completion.create(
@@ -108,19 +111,23 @@ def main():
                 responses.append(response['choices'][0]['text'] + "\n")
                 final_output = "".join(responses)
 
-        if args.model_resume == "Opensource":
-            logging.info("Resume with Opensource")
+        if args.model_summarize == "Opensource":
+            logging.info("Summarize with Opensource")
             responses = []
             model = pipeline("summarization")
-            for chunk in tqdm(chunks):
-                response = model(chunk)
-                # save response in new paragraph
-                responses.append(response[0]['summary_text'] + "\n")
-            final_output = "".join(responses)
-        with open('./resume/resume.txt', 'w') as f:
+            # Use a ThreadPoolExecutor to run the model function in parallel
+            with ThreadPoolExecutor() as executor:
+                # Submit the model function with chunks as the argument
+                # and append the returned summary to the responses list
+                futures = [executor.submit(model, chunk) for chunk in chunks]
+                for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures)):
+                    response = future.result()
+                    responses.append(response[0]['summary_text'] + "\n")
+
+        with open('summarizes/summarize.txt', 'w') as f:
             f.write(final_output)
             f.close()
-        logging.info("Saving Resume")
+        logging.info("Saving summarize")
 
 
 if __name__ == '__main__':
