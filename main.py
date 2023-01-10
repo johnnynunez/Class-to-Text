@@ -1,11 +1,19 @@
 import argparse
 import logging
+import os
 import sys
-import whisper
+
 import openai
+import whisper
+
 import utils
 
-openai.api_key = 'YOUR_API_KEY'
+CHUNK_SIZE = 4096
+
+ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
+with open(os.path.join(ROOT_DIR, './keys/openai_key.txt'), 'r') as f:
+    key = f.readline().strip()
+    openai.api_key = key
 
 logging.basicConfig(
     level=logging.INFO,
@@ -56,7 +64,8 @@ def main():
         path = utils.convert_video_to_audio_path(path, "./audios/audio.mp3")
 
     logging.info("Transcribe the audio")
-    result = model.transcribe(path, fp16=args.fp16, verbose=True)
+    result = model.transcribe(path, fp16=args.fp16, verbose=False)
+    # traduce result
 
     logging.info("Saving transcript")
     # save text with line breaks
@@ -74,19 +83,29 @@ def main():
         logging.info("Resume with AI")
         # load txt file
         transcript = open(args.path_transcript, 'r').read()
-        response = openai.Completion.create(
-            engine="text-davinci-002",
-            prompt=transcript,
-            max_tokens=1024,
-            temperature=0.5,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0
-        )
-        logging.info("Saving Resume")
-        with open('resume.txt', 'w') as f:
-            f.write(response['choices'][0]['text'])
+        # split text in chunks
+        chunks = utils.reduce_prompt(transcript)
+        # send chunks to AI
+        # Initialize an empty list to store the generated responses
+        responses = []
+        for chunk in chunks:
+            response = openai.Completion.create(
+                engine="davinci",
+                prompt=chunk,
+                temperature=0.9,
+                max_tokens=150,
+                top_p=1,
+                frequency_penalty=0,
+                presence_penalty=0.6,
+                stop=["\n"]
+            )
+            # save response in new paragraph
+            responses.append(response['choices'][0]['text'] + "\n")
+        final_output = "".join(responses)
+        with open(args.path_transcript, './resume/resume.txt') as f:
+            f.write(final_output)
             f.close()
+        logging.info("Saving Resume")
 
 
 if __name__ == '__main__':
