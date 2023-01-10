@@ -20,7 +20,8 @@ parser = argparse.ArgumentParser(description='Whisper Transcription',
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('--path_video', type=str, help='Path to video file')
 parser.add_argument('--path_audio', type=str, default='', help='Path to audio file')
-parser.add_argument('--path_transcript', type=str, default='transcriptions/transcript.txt', help='Path to transcript file')
+parser.add_argument('--path_transcript', type=str, default='transcriptions/transcript.txt',
+                    help='Path to transcript file')
 parser.add_argument('--resume', type=bool, default=False, help='Resume with AI')
 parser.add_argument("--model", help="Indicate the Whisper model to download", default="small")
 parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
@@ -86,8 +87,6 @@ def main():
         with open('resume.txt', 'w') as f:
             f.write(response['choices'][0]['text'])
             f.close()
-
-
 
 
 if __name__ == '__main__':
