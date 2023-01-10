@@ -1,4 +1,5 @@
 moviepy>=1.0.3
 whisper>=1.0
 tqdm>=4.64.1
+transformers>=4.25.1
 openai

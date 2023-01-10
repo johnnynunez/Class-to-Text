@@ -6,6 +6,7 @@ import sys
 import openai
 import whisper
 from tqdm import tqdm
+from transformers import pipeline
 
 import utils
 
@@ -32,7 +33,8 @@ parser.add_argument('--path_audio', type=str, default='', help='Path to audio fi
 parser.add_argument('--path_transcript', type=str, default='transcriptions/transcript.txt',
                     help='Path to transcript file')
 parser.add_argument('--resume', type=bool, default=False, help='Resume with AI')
-parser.add_argument("--model", help="Indicate the Whisper model to download", default="small")
+parser.add_argument("--model_transcription", help="Indicate the Whisper model to download", default="small")
+parser.add_argument("--model_resume", help="OpenAI or Opensource", default="Opensource")
 parser.add_argument('--device', type=str, default='cuda', help='Device to use for inference')
 parser.add_argument('--fp16', type=bool, default=False, help='Use FP16')
 args = parser.parse_args()
@@ -56,7 +58,7 @@ def main():
             exit()
 
     logging.info("Downloading Whisper model")
-    model = whisper.load_model(args.model, device=args.device)
+    model = whisper.load_model(args.model_transcription, device=args.device)
 
     logging.info("Loading video...")
     path = args.path_video if args.path_video else args.path_audio
@@ -82,30 +84,39 @@ def main():
     logging.info("Transcript saved in {}".format(args.path_transcript))
 
     if args.resume:
+        final_output = ""
         logging.info("Resume with AI")
-        # load txt file
         transcript = open(args.path_transcript, 'r').read()
-        # split text in chunks
+        # Split the text into chunks
         chunks = utils.reduce_prompt(transcript, CHUNK_SIZE)
-        # # Split the text into chunks
         # text_chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
-        # send chunks to AI
-        # Initialize an empty list to store the generated responses
-        responses = []
-        for chunk in tqdm(chunks):
-            response = openai.Completion.create(
-                engine="davinci",
-                prompt=chunk,  # f"{chunk}",
-                temperature=0.9,
-                max_tokens=150,
-                top_p=1,
-                frequency_penalty=0,
-                presence_penalty=0.6,
-                stop=["\n"]
-            )
-            # save response in new paragraph
-            responses.append(response['choices'][0]['text'] + "\n")
-        final_output = "".join(responses)
+        if args.model_resume == "OpenAI":
+            logging.info("Resume with OpenAI")
+            responses = []
+            for chunk in tqdm(chunks):
+                response = openai.Completion.create(
+                    engine="davinci",
+                    prompt=chunk,  # f"{chunk}",
+                    temperature=0.9,
+                    max_tokens=150,
+                    top_p=1,
+                    frequency_penalty=0,
+                    presence_penalty=0.6,
+                    stop=["\n"]
+                )
+                # save response in new paragraph
+                responses.append(response['choices'][0]['text'] + "\n")
+                final_output = "".join(responses)
+
+        if args.model_resume == "Opensource":
+            logging.info("Resume with Opensource")
+            responses = []
+            model = pipeline("summarization")
+            for chunk in tqdm(chunks):
+                response = model(chunk)
+                # save response in new paragraph
+                responses.append(response[0]['summary_text'] + "\n")
+            final_output = "".join(responses)
         with open('./resume/resume.txt', 'w') as f:
             f.write(final_output)
             f.close()
