@@ -86,13 +86,15 @@ def main():
         transcript = open(args.path_transcript, 'r').read()
         # split text in chunks
         chunks = utils.reduce_prompt(transcript, CHUNK_SIZE)
+        # # Split the text into chunks
+        # text_chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
         # send chunks to AI
         # Initialize an empty list to store the generated responses
         responses = []
         for chunk in tqdm(chunks):
             response = openai.Completion.create(
                 engine="davinci",
-                prompt=chunk,
+                prompt=chunk,  # f"{chunk}",
                 temperature=0.9,
                 max_tokens=150,
                 top_p=1,
