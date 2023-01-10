@@ -5,6 +5,7 @@ import sys
 
 import openai
 import whisper
+from tqdm import tqdm
 
 import utils
 
@@ -88,7 +89,7 @@ def main():
         # send chunks to AI
         # Initialize an empty list to store the generated responses
         responses = []
-        for chunk in chunks:
+        for chunk in tqdm(chunks):
             response = openai.Completion.create(
                 engine="davinci",
                 prompt=chunk,
